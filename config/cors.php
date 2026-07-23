@@ -19,7 +19,7 @@ return [
 
     "allowed_methods" => ["*"],
 
-    "allowed_origins" => ["https://raudlatul-hikmah.whdk.web.id"],
+    "allowed_origins" => ["https://raudlatul-hikmah.whdk.web.id", "http://localhost:5173"],
 
     "allowed_origins_patterns" => [],
 
