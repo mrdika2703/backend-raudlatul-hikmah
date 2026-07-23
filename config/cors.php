@@ -19,7 +19,7 @@ return [
 
     "allowed_methods" => ["*"],
 
-    "allowed_origins" => ["https://bcknd-raudlatulhikmah.whdk.web.id"],
+    "allowed_origins" => ["https://raudlatul-hikmah.whdk.web.id"],
 
     "allowed_origins_patterns" => [],
 
