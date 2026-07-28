@@ -1,23 +1,23 @@
 <?php
 
-namespace App\Http\Controllers\API;
+namespace App\Http\Controllers\API\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\BeritaAcara;
 use App\Models\HistoryData;
-use App\Models\Kegiatan;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
-class ActivityController extends Controller
+class NewsController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $kegiatan = Kegiatan::latest()->get();
-        return response()->json($kegiatan, 200);
+        $news = BeritaAcara::latest('tanggal_kegiatan')->latest('created_at')->get();
+        return response()->json($news, 200);
     }
 
     /**
@@ -29,7 +29,7 @@ class ActivityController extends Controller
             'judul' => 'required|string|max:255',
             'kategori' => 'required|string|max:255',
             'keterangan' => 'nullable|string',
-            'icon' => 'nullable|string|max:255',
+            'tanggal_kegiatan' => 'required|date',
             'gambar_1' => 'nullable',
             'gambar_2' => 'nullable',
             'gambar_3' => 'nullable',
@@ -37,22 +37,22 @@ class ActivityController extends Controller
 
         foreach (['gambar_1', 'gambar_2', 'gambar_3'] as $gambarKey) {
             if ($request->hasFile($gambarKey)) {
-                $validated[$gambarKey] = $request->file($gambarKey)->store('kegiatan', 'public');
+                $validated[$gambarKey] = $request->file($gambarKey)->store('news', 'public');
             }
         }
 
-        $kegiatan = Kegiatan::create($validated);
+        $news = BeritaAcara::create($validated);
 
         HistoryData::create([
             'user_id' => $request->user()->id,
             'category' => 'Tambah',
-            'keterangan' => 'Menambahkan kegiatan: ' . $kegiatan->judul,
+            'keterangan' => 'Menambahkan berita: ' . $news->judul,
             'date' => Carbon::now(),
         ]);
 
         return response()->json([
-            'message' => 'Kegiatan berhasil ditambahkan!',
-            'data' => $kegiatan
+            'message' => 'Berita berhasil ditambahkan!',
+            'data' => $news
         ], 201);
     }
 
@@ -61,8 +61,8 @@ class ActivityController extends Controller
      */
     public function show(string $id)
     {
-        $kegiatan = Kegiatan::findOrFail($id);
-        return response()->json($kegiatan, 200);
+        $news = BeritaAcara::findOrFail($id);
+        return response()->json($news, 200);
     }
 
     /**
@@ -70,13 +70,13 @@ class ActivityController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $kegiatan = Kegiatan::findOrFail($id);
+        $news = BeritaAcara::findOrFail($id);
 
         $validated = $request->validate([
             'judul' => 'required|string|max:255',
             'kategori' => 'required|string|max:255',
             'keterangan' => 'nullable|string',
-            'icon' => 'nullable|string|max:255',
+            'tanggal_kegiatan' => 'required|date',
             'gambar_1' => 'nullable',
             'gambar_2' => 'nullable',
             'gambar_3' => 'nullable',
@@ -84,25 +84,35 @@ class ActivityController extends Controller
 
         foreach (['gambar_1', 'gambar_2', 'gambar_3'] as $gambarKey) {
             if ($request->hasFile($gambarKey)) {
-                if ($kegiatan->$gambarKey && Storage::disk('public')->exists($kegiatan->$gambarKey)) {
-                    Storage::disk('public')->delete($kegiatan->$gambarKey);
+                if ($news->$gambarKey && Storage::disk('public')->exists($news->$gambarKey)) {
+                    Storage::disk('public')->delete($news->$gambarKey);
                 }
-                $validated[$gambarKey] = $request->file($gambarKey)->store('kegiatan', 'public');
+                $validated[$gambarKey] = $request->file($gambarKey)->store('news', 'public');
             }
         }
 
-        $kegiatan->update($validated);
+        // Handle clear photo requests (gambar_2 & gambar_3 only)
+        foreach (['gambar_2', 'gambar_3'] as $gambarKey) {
+            if ($request->input('clear_' . $gambarKey)) {
+                if ($news->$gambarKey && Storage::disk('public')->exists($news->$gambarKey)) {
+                    Storage::disk('public')->delete($news->$gambarKey);
+                }
+                $validated[$gambarKey] = null;
+            }
+        }
+
+        $news->update($validated);
 
         HistoryData::create([
             'user_id' => $request->user()->id,
             'category' => 'Edit',
-            'keterangan' => 'Memperbarui kegiatan: ' . $kegiatan->judul,
+            'keterangan' => 'Memperbarui berita: ' . $news->judul,
             'date' => Carbon::now(),
         ]);
 
         return response()->json([
-            'message' => 'Kegiatan berhasil diperbarui!',
-            'data' => $kegiatan
+            'message' => 'Berita berhasil diperbarui!',
+            'data' => $news
         ], 200);
     }
 
@@ -111,26 +121,26 @@ class ActivityController extends Controller
      */
     public function destroy(Request $request, string $id)
     {
-        $kegiatan = Kegiatan::findOrFail($id);
-        $judulKegiatan = $kegiatan->judul;
+        $news = BeritaAcara::findOrFail($id);
+        $judulNews = $news->judul;
 
         foreach (['gambar_1', 'gambar_2', 'gambar_3'] as $gambarKey) {
-            if ($kegiatan->$gambarKey && Storage::disk('public')->exists($kegiatan->$gambarKey)) {
-                Storage::disk('public')->delete($kegiatan->$gambarKey);
+            if ($news->$gambarKey && Storage::disk('public')->exists($news->$gambarKey)) {
+                Storage::disk('public')->delete($news->$gambarKey);
             }
         }
 
-        $kegiatan->delete();
+        $news->delete();
 
         HistoryData::create([
             'user_id' => $request->user()->id,
             'category' => 'Hapus',
-            'keterangan' => 'Menghapus kegiatan: ' . $judulKegiatan,
+            'keterangan' => 'Menghapus berita: ' . $judulNews,
             'date' => Carbon::now(),
         ]);
 
         return response()->json([
-            'message' => 'Kegiatan berhasil dihapus!'
+            'message' => 'Berita berhasil dihapus!'
         ], 200);
     }
 }

@@ -24,7 +24,8 @@ class DatabaseSeeder extends Seeder
             BeritaAcaraSeeder::class,
             VisiMisiSeeder::class,
             RaporSeeder::class,
-            HistorySeeder::class
+            HistorySeeder::class,
+            FasilitasSeeder::class
         ]);
     }
 }

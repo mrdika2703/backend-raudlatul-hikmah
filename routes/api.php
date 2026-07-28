@@ -1,21 +1,31 @@
 <?php
 
-use App\Http\Controllers\API\AbsensiController;
-use App\Http\Controllers\API\ActivityController;
-use App\Http\Controllers\API\AuthController;
-use App\Http\Controllers\API\DashboardController;
-use App\Http\Controllers\API\HistoryController;
-use App\Http\Controllers\API\HomeInformationController;
-use App\Http\Controllers\API\KelasController;
-use App\Http\Controllers\API\NewsController;
-use App\Http\Controllers\API\RaporController;
-use App\Http\Controllers\API\SiswaController;
-use App\Http\Controllers\API\UsersController;
+use App\Http\Controllers\API\Admin\AbsensiController;
+use App\Http\Controllers\API\Admin\ActivityController;
+use App\Http\Controllers\API\Admin\AuthController;
+use App\Http\Controllers\API\Admin\DashboardController;
+use App\Http\Controllers\API\Admin\HistoryController;
+use App\Http\Controllers\API\Admin\HomeInformationController;
+use App\Http\Controllers\API\Admin\KelasController;
+use App\Http\Controllers\API\Admin\NewsController;
+use App\Http\Controllers\API\Admin\RaporController;
+use App\Http\Controllers\API\Admin\SiswaController;
+use App\Http\Controllers\API\Admin\UsersController;
+use App\Http\Controllers\API\Admin\FasilitasController;
+use App\Http\Controllers\API\Public\HomeController;
+use App\Http\Controllers\API\Public\ProfileController;
+use App\Http\Controllers\API\Public\NewsController as PublicNewsController;
+use App\Http\Controllers\API\Public\RaporController as PublicRaporController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Rute Publik (Login)
 Route::post('/login', [AuthController::class, 'login']);
+Route::get('/home', [HomeController::class, 'index']);
+Route::get('/profile', [ProfileController::class, 'index']);
+Route::get('/public/news', [PublicNewsController::class, 'index']);
+Route::get('/public/news/{id}', [PublicNewsController::class, 'show']);
+Route::get('/public/rapor', [PublicRaporController::class, 'index']);
 
 // Rute Terproteksi (Harus bawa Bearer Token)
 Route::middleware('auth:sanctum')->group(function () {
@@ -36,6 +46,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('rapor', RaporController::class);
     Route::apiResource('news', NewsController::class);
     Route::apiResource('home-information', HomeInformationController::class);
+    Route::apiResource('fasilitas', FasilitasController::class);
     Route::apiResource('activity', ActivityController::class);
     Route::apiResource('users', UsersController::class);
     Route::get('history', [HistoryController::class, 'index']);

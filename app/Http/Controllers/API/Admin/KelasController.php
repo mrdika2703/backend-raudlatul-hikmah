@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\API;
+namespace App\Http\Controllers\API\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\HistoryData;
@@ -151,18 +151,18 @@ class KelasController extends Controller
         $currentTahun = $kelas->tahun_ajaran;
 
         if (strcasecmp($currentSemester, 'Ganjil') === 0) {
-             $newSemester = 'Genap';
-             $newTahun = $currentTahun;
+            $newSemester = 'Genap';
+            $newTahun = $currentTahun;
         } else {
-             $newSemester = 'Ganjil';
-             $years = explode('/', $currentTahun);
-             if (count($years) === 2) {
-                 $year1 = (int)$years[0] + 1;
-                 $year2 = (int)$years[1] + 1;
-                 $newTahun = "$year1/$year2";
-             } else {
-                 $newTahun = $currentTahun;
-             }
+            $newSemester = 'Ganjil';
+            $years = explode('/', $currentTahun);
+            if (count($years) === 2) {
+                $year1 = (int)$years[0] + 1;
+                $year2 = (int)$years[1] + 1;
+                $newTahun = "$year1/$year2";
+            } else {
+                $newTahun = $currentTahun;
+            }
         }
 
         $validated = $request->validate([
