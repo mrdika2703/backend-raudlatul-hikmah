@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\HistoryData;
 use App\Models\Kegiatan;
+use App\Services\ImageService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -37,7 +38,7 @@ class ActivityController extends Controller
 
         foreach (['gambar_1', 'gambar_2', 'gambar_3'] as $gambarKey) {
             if ($request->hasFile($gambarKey)) {
-                $validated[$gambarKey] = $request->file($gambarKey)->store('kegiatan', 'public');
+                $validated[$gambarKey] = ImageService::compressAndStore($request->file($gambarKey), 'kegiatan');
             }
         }
 
@@ -87,7 +88,7 @@ class ActivityController extends Controller
                 if ($kegiatan->$gambarKey && Storage::disk('public')->exists($kegiatan->$gambarKey)) {
                     Storage::disk('public')->delete($kegiatan->$gambarKey);
                 }
-                $validated[$gambarKey] = $request->file($gambarKey)->store('kegiatan', 'public');
+                $validated[$gambarKey] = ImageService::compressAndStore($request->file($gambarKey), 'kegiatan');
             }
         }
 

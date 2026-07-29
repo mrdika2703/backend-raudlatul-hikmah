@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\HistoryData;
 use App\Models\User;
+use App\Services\ImageService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -39,7 +40,7 @@ class UsersController extends Controller
         ]);
 
         if ($request->hasFile('photo')) {
-            $validated['photo'] = $request->file('photo')->store('users', 'public');
+            $validated['photo'] = ImageService::compressAndStore($request->file('photo'), 'users');
         }
 
         $validated['password'] = Hash::make($validated['password']);
@@ -90,7 +91,7 @@ class UsersController extends Controller
             if ($user->photo && Storage::disk('public')->exists($user->photo)) {
                 Storage::disk('public')->delete($user->photo);
             }
-            $validated['photo'] = $request->file('photo')->store('users', 'public');
+            $validated['photo'] = ImageService::compressAndStore($request->file('photo'), 'users');
         }
 
         if (!empty($validated['password'])) {

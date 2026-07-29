@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Fasilitas;
 use App\Models\HistoryData;
+use App\Services\ImageService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -31,7 +32,7 @@ class FasilitasController extends Controller
         ]);
 
         if ($request->hasFile('gambar')) {
-            $validated['gambar'] = $request->file('gambar')->store('fasilitas', 'public');
+            $validated['gambar'] = ImageService::compressAndStore($request->file('gambar'), 'fasilitas');
         }
 
         $fasilitas = Fasilitas::create($validated);
@@ -75,7 +76,7 @@ class FasilitasController extends Controller
             if ($fasilitas->gambar && Storage::disk('public')->exists($fasilitas->gambar)) {
                 Storage::disk('public')->delete($fasilitas->gambar);
             }
-            $validated['gambar'] = $request->file('gambar')->store('fasilitas', 'public');
+            $validated['gambar'] = ImageService::compressAndStore($request->file('gambar'), 'fasilitas');
         }
 
         // Handle clear gambar

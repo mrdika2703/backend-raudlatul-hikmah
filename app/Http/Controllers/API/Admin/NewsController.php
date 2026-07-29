@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\BeritaAcara;
 use App\Models\HistoryData;
+use App\Services\ImageService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -37,7 +38,7 @@ class NewsController extends Controller
 
         foreach (['gambar_1', 'gambar_2', 'gambar_3'] as $gambarKey) {
             if ($request->hasFile($gambarKey)) {
-                $validated[$gambarKey] = $request->file($gambarKey)->store('news', 'public');
+                $validated[$gambarKey] = ImageService::compressAndStore($request->file($gambarKey), 'news');
             }
         }
 
@@ -87,7 +88,7 @@ class NewsController extends Controller
                 if ($news->$gambarKey && Storage::disk('public')->exists($news->$gambarKey)) {
                     Storage::disk('public')->delete($news->$gambarKey);
                 }
-                $validated[$gambarKey] = $request->file($gambarKey)->store('news', 'public');
+                $validated[$gambarKey] = ImageService::compressAndStore($request->file($gambarKey), 'news');
             }
         }
 
