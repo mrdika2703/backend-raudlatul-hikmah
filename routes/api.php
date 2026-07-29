@@ -35,6 +35,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::get('dashboard', [DashboardController::class, 'index']);
+    Route::post('siswas/import', [SiswaController::class, 'import']);
     Route::apiResource('siswas', SiswaController::class);
     Route::patch('kelas/{id}/status', [KelasController::class, 'updateStatus']);
     Route::post('kelas/{id}/naik-kelas', [KelasController::class, 'naikKelas']);

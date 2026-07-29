@@ -8,6 +8,7 @@ use App\Models\Siswa;
 use App\Models\Kelas;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SiswaController extends Controller
 {
@@ -139,6 +140,75 @@ class SiswaController extends Controller
 
         return response()->json([
             'message' => 'Data siswa berhasil dihapus!'
+        ], 200);
+    }
+
+    // 6. IMPORT: Batch import data siswa ke kelas tertentu
+    public function import(Request $request)
+    {
+        $validated = $request->validate([
+            'kelas' => 'required',
+            'siswas' => 'required|array|min:1',
+            'siswas.*.nama_lengkap' => 'required|string|max:255',
+            'siswas.*.nisn' => 'required|string',
+            'siswas.*.jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
+        ]);
+
+        // Map kelas
+        if (is_numeric($validated['kelas'])) {
+            $kelasObj = Kelas::find($validated['kelas']);
+        } else {
+            $kelasName = str_replace('Kelas ', '', $validated['kelas']);
+            $kelasObj = Kelas::where('kelas', $kelasName)->first();
+        }
+
+        if (!$kelasObj) {
+            $kelasName = str_replace('Kelas ', '', $validated['kelas']);
+            $kelasObj = Kelas::firstOrCreate([
+                'kelas' => $kelasName,
+                'semester' => 'Ganjil',
+                'tahun_ajaran' => '2023/2024'
+            ]);
+        }
+
+        $importedCount = 0;
+        $skippedCount = 0;
+        $errors = [];
+
+        DB::transaction(function () use ($validated, $kelasObj, &$importedCount, &$skippedCount, &$errors) {
+            foreach ($validated['siswas'] as $index => $item) {
+                // Check uniqueness NISN
+                $exists = Siswa::where('nisn', $item['nisn'])->exists();
+                if ($exists) {
+                    $skippedCount++;
+                    $errors[] = "Baris " . ($index + 1) . ": NISN " . $item['nisn'] . " (" . $item['nama_lengkap'] . ") sudah terdaftar.";
+                    continue;
+                }
+
+                Siswa::create([
+                    'nama_lengkap' => trim($item['nama_lengkap']),
+                    'nisn' => trim((string) $item['nisn']),
+                    'jenis_kelamin' => $item['jenis_kelamin'],
+                    'kelas_id' => $kelasObj->id,
+                ]);
+                $importedCount++;
+            }
+        });
+
+        if ($importedCount > 0) {
+            HistoryData::create([
+                'user_id' => $request->user()->id,
+                'category' => 'Tambah',
+                'keterangan' => 'Meng-import ' . $importedCount . ' siswa ke kelas ' . $kelasObj->kelas,
+                'date' => Carbon::now(),
+            ]);
+        }
+
+        return response()->json([
+            'message' => "Berhasil meng-import {$importedCount} siswa.",
+            'imported_count' => $importedCount,
+            'skipped_count' => $skippedCount,
+            'errors' => $errors,
         ], 200);
     }
 }
